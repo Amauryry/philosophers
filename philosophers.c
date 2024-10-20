@@ -10,31 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <pthread.h>
-#include <stdio.h>
-#include <unistd.h>   // for usleep
-#include <stdlib.h>   // for malloc
-#include <sys/time.h> // for gettimeofday
-
-typedef struct s_data
-{
-    int nb_p;
-    int die_time;     // Time until a philosopher dies if they don't eat
-    int eat_time;     // Time spent eating
-    int sleep_time;   // Time spent sleeping
-} t_data;
-
-pthread_mutex_t *forks;  // Array of forks (mutexes)
-pthread_mutex_t death_mutex = PTHREAD_MUTEX_INITIALIZER;  // Mutex to protect the death flag
-int someone_died = 0;  // Global flag to indicate if a philosopher has died
-
-// Structure to hold the philosopher's ID and shared data
-typedef struct s_philosopher
-{
-    int id;
-    t_data *data;
-    long last_meal_time;  // Timestamp of the last meal in milliseconds
-} t_philosopher;
+#include "philosophers.h"
 
 // Utility to get the current time in milliseconds
 long get_current_time_in_ms()
@@ -54,35 +30,33 @@ void *philosopher(void *arg)
 
     while (1) {
         // Check if someone already died
-        pthread_mutex_lock(&death_mutex);
-        if (someone_died) {
-            pthread_mutex_unlock(&death_mutex);
+        pthread_mutex_lock(&data->death_mutex);
+        if (data->someone_died)
+        {
+            pthread_mutex_unlock(&data->death_mutex);
             break;
         }
-        pthread_mutex_unlock(&death_mutex);
+        pthread_mutex_unlock(&data->death_mutex);
 
-        if (!someone_died)
+        if (!data->someone_died)
         {
-            pthread_mutex_lock(&forks[id]);  // Lock the left fork
-            pthread_mutex_lock(&forks[(id + 1) % data->nb_p]);  // Lock the right fork
+            pthread_mutex_lock(&data->forks[id]);  // Lock the left fork
+            pthread_mutex_lock(&data->forks[(id + 1) % data->nb_p]);  // Lock the right fork
 
             printf("Philosopher %d is eating.\n", id);
             philo->last_meal_time = get_current_time_in_ms();  // Update the last meal time
             usleep(1000 * data->eat_time);  // Use eat_time from data
 
-            pthread_mutex_unlock(&forks[id]);  // Unlock the left fork
-            pthread_mutex_unlock(&forks[(id + 1) % data->nb_p]);  // Unlock the right fork
+            pthread_mutex_unlock(&data->forks[id]);  // Unlock the left fork
+            pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);  // Unlock the right fork
         }
 
         // Thinking
-        if (!someone_died)
-        {
+        if (!data->someone_died)
             printf("Philosopher %d is thinking.\n", id);
-            usleep(1000 * (rand() % 500));  // Random thinking time
-        }
 
         // Sleeping (split into smaller intervals for regular death checks)
-        if (!someone_died)
+        if (!data->someone_died)
         {
             printf("Philosopher %d is sleeping.\n", id);
             int sleep_interval = 100;  // Sleep in small intervals (100ms) to allow frequent checks
@@ -93,32 +67,32 @@ void *philosopher(void *arg)
                 // Check if someone has died during sleep
                 current_time = get_current_time_in_ms();
                 if ((current_time - philo->last_meal_time) > data->die_time) {
-                    pthread_mutex_lock(&death_mutex);
-                    if (!someone_died) {
-                        someone_died = 1;  // Set the death flag
+                    pthread_mutex_lock(&data->death_mutex);
+                    if (!data->someone_died) {
+                        data->someone_died = 1;  // Set the death flag
                         printf("Philosopher %d has died.\n", id);
                     }
-                    pthread_mutex_unlock(&death_mutex);
+                    pthread_mutex_unlock(&data->death_mutex);
                     return NULL;  // End the simulation for this philosopher
                 }
-                pthread_mutex_lock(&death_mutex);
-                if (someone_died) {
-                    pthread_mutex_unlock(&death_mutex);
+                pthread_mutex_lock(&data->death_mutex);
+                if (data->someone_died) {
+                    pthread_mutex_unlock(&data->death_mutex);
                     return NULL;
                 }
-                pthread_mutex_unlock(&death_mutex);
+                pthread_mutex_unlock(&data->death_mutex);
             }
         }
 
         // Check if the philosopher has died
         current_time = get_current_time_in_ms();
         if ((current_time - philo->last_meal_time) > data->die_time) {
-            pthread_mutex_lock(&death_mutex);
-            if (!someone_died) {
-                someone_died = 1;  // Set the death flag
+            pthread_mutex_lock(&data->death_mutex);
+            if (!data->someone_died) {
+                data->someone_died = 1;  // Set the death flag
                 printf("Philosopher %d has died.\n", id);
             }
-            pthread_mutex_unlock(&death_mutex);
+            pthread_mutex_unlock(&data->death_mutex);
             break;  // End the simulation for this philosopher
         }
     }
@@ -132,6 +106,9 @@ void setup_data(t_data *data, char **argv)
     data->die_time = atoi(argv[2]);
     data->eat_time = atoi(argv[3]);
     data->sleep_time = atoi(argv[4]);
+    data->someone_died = 0;  // Initialize the death flag
+    data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);  // Allocate dynamic array for forks
+    pthread_mutex_init(&data->death_mutex, NULL);  // Initialize the death mutex
 }
 
 int main(int argc, char **argv)
@@ -145,13 +122,12 @@ int main(int argc, char **argv)
     t_data data;
     setup_data(&data, argv);
 
-    forks = malloc(sizeof(pthread_mutex_t) * data.nb_p);  // Allocate dynamic array for forks
     pthread_t philosophers[data.nb_p];
     t_philosopher philo_args[data.nb_p];
 
     // Initialize mutexes for the forks
     for (int i = 0; i < data.nb_p; i++) {
-        pthread_mutex_init(&forks[i], NULL);
+        pthread_mutex_init(&data.forks[i], NULL);
     }
 
     // Create threads for each philosopher
@@ -169,10 +145,10 @@ int main(int argc, char **argv)
 
     // Destroy the mutexes when done
     for (int i = 0; i < data.nb_p; i++) {
-        pthread_mutex_destroy(&forks[i]);
+        pthread_mutex_destroy(&data.forks[i]);
     }
 
-    free(forks);  // Free the dynamically allocated array for forks
+    free(data.forks);  // Free the dynamically allocated array for forks
 
     return 0;
 }
