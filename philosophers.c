@@ -3,14 +3,43 @@
 /*                                                        :::      ::::::::   */
 /*   philosophers.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aberion <aberion@student.42.fr>            #+#  +:+       +#+        */
+/*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024-10-18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024-10-18 00:27:03 by aberion          ###   ########.fr       */
+/*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
+/*   Updated: 2024/10/21 11:25:31 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
+#include <unistd.h>
+
+
+int	ft_atoi(const char *str)
+{
+	int				minus;
+	unsigned int	result;
+	int				i;
+
+	i = 0;
+	result = 0;
+	minus = 1;
+	while ((str[i] >= 9 && str[i] <= 13) || str[i] == 32)
+		i++;
+	if (str[i] == '+')
+		i++;
+	else if (str[i] == '-')
+	{
+		i++;
+		minus *= (-1);
+	}
+	while (str[i] && str[i] >= '0' && str[i] <= '9')
+	{
+		result *= 10;
+		result += str[i] - 48;
+		i++;
+	}
+	return (result *= minus);
+}
 
 // Utility to get the current time in milliseconds
 long get_current_time_in_ms()
@@ -59,7 +88,7 @@ void *philosopher(void *arg)
         if (!data->someone_died)
         {
             printf("Philosopher %d is sleeping.\n", id);
-            int sleep_interval = 100;  // Sleep in small intervals (100ms) to allow frequent checks
+            int sleep_interval = 10;  // Sleep in small intervals (100ms) to allow frequent checks
             for (int i = 0; i < data->sleep_time; i += sleep_interval)
             {
                 usleep(1000 * sleep_interval);
@@ -102,10 +131,10 @@ void *philosopher(void *arg)
 
 void setup_data(t_data *data, char **argv)
 {
-    data->nb_p = atoi(argv[1]);
-    data->die_time = atoi(argv[2]);
-    data->eat_time = atoi(argv[3]);
-    data->sleep_time = atoi(argv[4]);
+    data->nb_p = ft_atoi(argv[1]);
+    data->die_time = ft_atoi(argv[2]);
+    data->eat_time = ft_atoi(argv[3]);
+    data->sleep_time = ft_atoi(argv[4]);
     data->someone_died = 0;  // Initialize the death flag
     data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);  // Allocate dynamic array for forks
     pthread_mutex_init(&data->death_mutex, NULL);  // Initialize the death mutex
@@ -118,9 +147,15 @@ int main(int argc, char **argv)
         printf("error\nhow to use : number_of_philosophers time_to_die time_to_eat time_to_sleep\n");
         return 1;
     }
-
     t_data data;
     setup_data(&data, argv);
+    if (data.nb_p == 1)
+    {
+        usleep(1000 * data.die_time);
+        printf("Philosopher 0 has died.\n");
+        free(data.forks);
+        return 0;
+    }
 
     pthread_t philosophers[data.nb_p];
     t_philosopher philo_args[data.nb_p];
