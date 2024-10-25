@@ -12,6 +12,7 @@
 
 #include "../philosophers.h"
 #include <unistd.h>
+#include <stdlib.h>
 
 int	ft_atoi(const char *str)
 {
@@ -55,15 +56,19 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
     while (get_current_time_in_ms() < end_time)
     {
         usleep(1000);  // Sleep for 1 millisecond to avoid busy-waiting
-        pthread_mutex_lock(&data->death_mutex);
-        if (data->someone_died || (get_current_time_in_ms() - philo->last_meal_time) > data->die_time)
+        // pthread_mutex_lock(&data->death_mutex);
+        if (data->someone_died)
         {
-			printf("test\n");
-			data->someone_died = 1;
-            pthread_mutex_unlock(&data->death_mutex);
+            exit(0);
+            // pthread_mutex_unlock(&data->death_mutex);
             return 1;
         }
-        pthread_mutex_unlock(&data->death_mutex);
+        if ((get_current_time_in_ms() - philo->last_meal_time) > data->die_time)
+        {
+            data->someone_died = 1;
+            return 42;
+        }
+        // pthread_mutex_unlock(&data->death_mutex);
     }
     return 0;
 }
@@ -71,11 +76,8 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
 void man_down(t_philosopher *philo)
 {
     long current_time = get_current_time_in_ms();
-    pthread_mutex_lock(&philo->data->death_mutex);
-    if (!philo->data->someone_died)
-    {
-        philo->data->someone_died = 1;  // Marque un philosophe comme mort
-        printf("%ld %d died\n", current_time, philo->id);
-    }
-    pthread_mutex_unlock(&philo->data->death_mutex);
+    // pthread_mutex_lock(&philo->data->death_mutex);
+    philo->data->someone_died = 1;  // Marque un philosophe comme mort
+    printf("%ld %d died\n", current_time, philo->id);
+    // pthread_mutex_unlock(&philo->data->death_mutex);
 }
