@@ -21,6 +21,7 @@
 
 typedef struct s_data
 {
+    int statring_time;
     int nb_p;
     int die_time;     // Time until a philosopher dies if they don't eat
     int eat_time;     // Time spent eating
@@ -37,5 +38,10 @@ typedef struct s_philosopher
     t_data *data;
     long last_meal_time;  // Timestamp of the last meal in milliseconds
 } t_philosopher;
+
+int	ft_atoi(const char *str);
+long get_current_time_in_ms();
+int skip_time(int time, t_data *data, t_philosopher *philo);
+void man_down(t_philosopher *philo);
 
 #endif
