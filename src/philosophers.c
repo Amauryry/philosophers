@@ -137,7 +137,6 @@ int main(int argc, char **argv)
         pthread_mutex_destroy(&data.forks[i]);
     }
     free(data.forks);  // Free the dynamically allocated array for forks
-
     return 0;
 }
 
