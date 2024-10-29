@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philosophers.h                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aberion <aberion@student.42.fr>            #+#  +:+       +#+        */
+/*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024-10-20 07:54:47 by aberion           #+#    #+#             */
-/*   Updated: 2024-10-20 07:54:47 by aberion          ###   ########.fr       */
+/*   Created: 2024/10/20 07:54:47 by aberion           #+#    #+#             */
+/*   Updated: 2024/10/29 16:40:38 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@ typedef struct s_data
     int sleep_time;   // Time spent sleeping
     pthread_mutex_t *forks;    // Array of forks (mutexes)
     pthread_mutex_t death_mutex;  // Mutex to protect the death flag
+    pthread_mutex_t print_mutex;  // Mutex to protect printf calls
     int someone_died;  // Flag to indicate if a philosopher has died
 } t_data;
 
@@ -43,5 +44,10 @@ int	ft_atoi(const char *str);
 long get_current_time_in_ms();
 int skip_time(int time, t_data *data, t_philosopher *philo);
 void man_down(t_philosopher *philo);
+int     eat_routine(t_data *data, t_philosopher *philo);
+void lock_forks(t_data *data, int id);
+void unlock_forks(t_data *data, int id);
+int is_someone_dead(t_data *data);
+int sleep_routine(t_data *data, t_philosopher *philo);
 
 #endif

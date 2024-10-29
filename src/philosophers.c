@@ -6,12 +6,13 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/10/21 11:25:31 by aberion          ###   ########.fr       */
+/*   Updated: 2024/10/29 17:19:11 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../philosophers.h"
 #include <unistd.h>
+#include <stdbool.h>
 
 void *philosopher(void *arg)
 {
@@ -22,71 +23,29 @@ void *philosopher(void *arg)
 
     while (1)
     {
-        // Vérification si un philosophe est déjà mort
-        // pthread_mutex_lock(&data->death_mutex);
-        if (data->someone_died)
+        if(is_someone_dead(data))
+            break;
+        if (eat_routine(data, philo))
+            break;
+        if(is_someone_dead(data))
+            break;
+        current_time = get_current_time_in_ms();
+        pthread_mutex_lock(&data->print_mutex);
+        if (!is_someone_dead(data))
+            printf("%ld %d is thinking\n", current_time, id);
+        pthread_mutex_unlock(&data->print_mutex);
+
+        if(sleep_routine(data, philo))
+            break;
+        current_time = get_current_time_in_ms();
+        if ((current_time - philo->last_meal_time) > data->die_time)
         {
-            // pthread_mutex_unlock(&data->death_mutex);
-            break;  // Quitte immédiatement si quelqu'un est mort
-        }
-        // pthread_mutex_unlock(&data->death_mutex);
-
-        // Philosophe prend les fourchettes et mange
-        pthread_mutex_lock(&data->forks[id]);  // Verrouille la fourchette gauche
-        pthread_mutex_lock(&data->forks[(id + 1) % data->nb_p]);  // Verrouille la fourchette droite
-
-        current_time = get_current_time_in_ms();
-        printf("%ld %d has taken a fork\n", current_time, id);
-        printf("%ld %d is eating\n", current_time, id);
-        philo->last_meal_time = current_time;  // Met à jour l'heure du dernier repas
-        if (skip_time(data->eat_time, data, philo) == 42)
-        {  
-            pthread_mutex_unlock(&data->forks[id]);  // Déverrouille la fourchette gauche
-            pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
             man_down(philo);
-            break;
-        }
-        pthread_mutex_unlock(&data->forks[id]);  // Déverrouille la fourchette gauche
-        pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);  // Déverrouille la fourchette droite
-
-        // pthread_mutex_lock(&data->death_mutex);
-        if (data->someone_died)
-        {
-            // pthread_mutex_unlock(&data->death_mutex);
-            break;
-        }
-        // pthread_mutex_unlock(&data->death_mutex);
-
-        // Philosophe pense
-        current_time = get_current_time_in_ms();
-        printf("%ld %d is thinking\n", current_time, id);
-
-        printf("line 65 %d == %d\n",philo->id, data->someone_died);
-
-        // Philosophe dort en vérifiant fréquemment la condition de mort
-        current_time = get_current_time_in_ms();
-        printf("%ld %d is sleeping\n", current_time, id);
-        if (skip_time(data->sleep_time, data, philo))  // Utiliser skip_time pour passer le temps de sommeil
-        {  
-            pthread_mutex_unlock(&data->forks[id]);  // Déverrouille la fourchette gauche
-            pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
-            man_down(philo);
-            break;
-        }
-
-        // Dernière vérification de la mort après avoir dormi
-        current_time = get_current_time_in_ms();
-        if ((current_time - philo->last_meal_time) > data->die_time) {
-
-            man_down(philo);  // Appelle man_down pour imprimer la mort seulement pour ce philosophe
-            break;  // Quitte la boucle pour ce philosophe
+            break; 
         }
     }
     return NULL;
 }
-
-
-
 
 void setup_data(t_data *data, char **argv)
 {
@@ -98,6 +57,8 @@ void setup_data(t_data *data, char **argv)
     data->someone_died = 0;  // Initialize the death flag
     data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);  // Allocate dynamic array for forks
     pthread_mutex_init(&data->death_mutex, NULL);  // Initialize the death mutex
+    pthread_mutex_init(&data->print_mutex, NULL);  // Initialize print mutex
+
 }
 
 int main(int argc, char **argv)
@@ -125,7 +86,8 @@ int main(int argc, char **argv)
     t_philosopher philo_args[data.nb_p];
 
     // Initialize mutexes for the forks
-    for (int i = 0; i < data.nb_p; i++) {
+    for (int i = 0; i < data.nb_p; i++)
+    {
         pthread_mutex_init(&data.forks[i], NULL);
     }
 
@@ -140,12 +102,15 @@ int main(int argc, char **argv)
     }
     // printf("test2\n");
     // Join threads (although in this example, the threads will exit when the first philosopher dies)
-    for (int i = 0; i < data.nb_p; i++) {
+    for (int i = 0; i < data.nb_p; i++)
+    {
         pthread_join(philosophers[i], NULL);
     }
+    pthread_mutex_destroy(&data.print_mutex);  // Destroy print mutex
 
     // Destroy the mutexes when done
-    for (int i = 0; i < data.nb_p; i++) {
+    for (int i = 0; i < data.nb_p; i++)
+    {
         pthread_mutex_destroy(&data.forks[i]);
     }
     free(data.forks);  // Free the dynamically allocated array for forks

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   subsidiary_f.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aberion <aberion@student.42.fr>            #+#  +:+       +#+        */
+/*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024-10-25 10:52:51 by aberion           #+#    #+#             */
-/*   Updated: 2024-10-25 10:52:51 by aberion          ###   ########.fr       */
+/*   Created: 2024/10/25 10:52:51 by aberion           #+#    #+#             */
+/*   Updated: 2024/10/29 17:16:05 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,19 +56,19 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
     while (get_current_time_in_ms() < end_time)
     {
         usleep(1000);  // Sleep for 1 millisecond to avoid busy-waiting
-        // pthread_mutex_lock(&data->death_mutex);
+        pthread_mutex_lock(&data->death_mutex);
         if (data->someone_died)
         {
-            exit(0);
-            // pthread_mutex_unlock(&data->death_mutex);
+            pthread_mutex_unlock(&data->death_mutex);
             return 1;
         }
         if ((get_current_time_in_ms() - philo->last_meal_time) > data->die_time)
         {
             data->someone_died = 1;
+            pthread_mutex_unlock(&data->death_mutex);
             return 42;
         }
-        // pthread_mutex_unlock(&data->death_mutex);
+        pthread_mutex_unlock(&data->death_mutex);
     }
     return 0;
 }
@@ -76,8 +76,40 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
 void man_down(t_philosopher *philo)
 {
     long current_time = get_current_time_in_ms();
-    // pthread_mutex_lock(&philo->data->death_mutex);
+    pthread_mutex_lock(&philo->data->death_mutex);
     philo->data->someone_died = 1;  // Marque un philosophe comme mort
     printf("%ld %d died\n", current_time, philo->id);
-    // pthread_mutex_unlock(&philo->data->death_mutex);
+    pthread_mutex_unlock(&philo->data->death_mutex);
+}
+
+void lock_forks(t_data *data, int id)
+{
+    if (id % 2 == 0)
+    {
+        pthread_mutex_lock(&data->forks[id]);
+        pthread_mutex_lock(&data->forks[(id + 1) % data->nb_p]);
+    }
+    else
+    {
+        pthread_mutex_lock(&data->forks[(id + 1) % data->nb_p]);
+        pthread_mutex_lock(&data->forks[id]);
+    }
+}
+
+void unlock_forks(t_data *data, int id)
+{
+    pthread_mutex_unlock(&data->forks[id]);
+    pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
+}
+
+int is_someone_dead(t_data *data)
+{
+    pthread_mutex_lock(&data->death_mutex);
+        if (data->someone_died)
+        {
+            pthread_mutex_unlock(&data->death_mutex);
+            return 1;
+        }
+    pthread_mutex_unlock(&data->death_mutex);
+    return 0;
 }
