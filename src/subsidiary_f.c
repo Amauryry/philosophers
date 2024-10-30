@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 10:52:51 by aberion           #+#    #+#             */
-/*   Updated: 2024/10/29 17:16:05 by aberion          ###   ########.fr       */
+/*   Updated: 2024/10/30 17:20:51 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,6 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
 
     while (get_current_time_in_ms() < end_time)
     {
-        usleep(1000);  // Sleep for 1 millisecond to avoid busy-waiting
         pthread_mutex_lock(&data->death_mutex);
         if (data->someone_died)
         {
@@ -73,13 +72,22 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
     return 0;
 }
 
-void man_down(t_philosopher *philo)
+void man_down(t_data *data, t_philosopher *philo)
 {
-    long current_time = get_current_time_in_ms();
     pthread_mutex_lock(&philo->data->death_mutex);
     philo->data->someone_died = 1;  // Marque un philosophe comme mort
-    printf("%ld %d died\n", current_time, philo->id);
     pthread_mutex_unlock(&philo->data->death_mutex);
+    pthread_mutex_lock(&data->print_mutex);
+    printf("%ld %d died\n",  (get_current_time_in_ms() - philo->data->statring_time), philo->id);
+    pthread_mutex_unlock(&data->print_mutex);
+    
+}
+
+void set_fork_status(t_data *data, int id, int status)
+{
+    pthread_mutex_lock(&data->fork_status_mutex[id]); // Protéger l'accès à fork_status avec un mutex
+    data->fork_status[id] = status;
+    pthread_mutex_unlock(&data->fork_status_mutex[id]);
 }
 
 void lock_forks(t_data *data, int id)
@@ -87,18 +95,25 @@ void lock_forks(t_data *data, int id)
     if (id % 2 == 0)
     {
         pthread_mutex_lock(&data->forks[id]);
+        set_fork_status(data, id, 1);
         pthread_mutex_lock(&data->forks[(id + 1) % data->nb_p]);
+        set_fork_status(data, (id + 1) % data->nb_p, 1);
     }
     else
     {
         pthread_mutex_lock(&data->forks[(id + 1) % data->nb_p]);
+        set_fork_status(data, (id + 1) % data->nb_p, 1);
         pthread_mutex_lock(&data->forks[id]);
+        set_fork_status(data, id, 1);
     }
 }
 
+
 void unlock_forks(t_data *data, int id)
 {
+    set_fork_status(data, id, 0);
     pthread_mutex_unlock(&data->forks[id]);
+    set_fork_status(data, (id + 1) % data->nb_p, 0);
     pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
 }
 

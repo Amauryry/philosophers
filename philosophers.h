@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/20 07:54:47 by aberion           #+#    #+#             */
-/*   Updated: 2024/10/29 16:40:38 by aberion          ###   ########.fr       */
+/*   Updated: 2024/10/30 17:18:19 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,15 +21,17 @@
 
 typedef struct s_data
 {
-    int statring_time;
+    long statring_time;
     int nb_p;
     int die_time;     // Time until a philosopher dies if they don't eat
     int eat_time;     // Time spent eating
     int sleep_time;   // Time spent sleeping
     pthread_mutex_t *forks;    // Array of forks (mutexes)
+    pthread_mutex_t *fork_status_mutex;
     pthread_mutex_t death_mutex;  // Mutex to protect the death flag
     pthread_mutex_t print_mutex;  // Mutex to protect printf calls
     int someone_died;  // Flag to indicate if a philosopher has died
+    int *fork_status;
 } t_data;
 
 // Structure to hold the philosopher's ID and shared data
@@ -43,11 +45,13 @@ typedef struct s_philosopher
 int	ft_atoi(const char *str);
 long get_current_time_in_ms();
 int skip_time(int time, t_data *data, t_philosopher *philo);
-void man_down(t_philosopher *philo);
+void man_down(t_data *data, t_philosopher *philo);
 int     eat_routine(t_data *data, t_philosopher *philo);
 void lock_forks(t_data *data, int id);
 void unlock_forks(t_data *data, int id);
 int is_someone_dead(t_data *data);
 int sleep_routine(t_data *data, t_philosopher *philo);
+int launch_parsing(int argc, char **argv);
+int waiting_room(t_data *data, t_philosopher *philo);
 
 #endif

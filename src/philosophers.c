@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/10/29 17:19:11 by aberion          ###   ########.fr       */
+/*   Updated: 2024/10/30 17:32:15 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+// TIME TO DIE == TIME TO EAT == TIME TO SLEEP
 void *philosopher(void *arg)
 {
     t_philosopher *philo = (t_philosopher *)arg;
@@ -25,22 +26,23 @@ void *philosopher(void *arg)
     {
         if(is_someone_dead(data))
             break;
+        if(waiting_room(data, philo))
+            break;
         if (eat_routine(data, philo))
             break;
-        if(is_someone_dead(data))
+        // if(is_someone_dead(data))
+        //     break;
+        if(sleep_routine(data, philo))
             break;
         current_time = get_current_time_in_ms();
         pthread_mutex_lock(&data->print_mutex);
         if (!is_someone_dead(data))
-            printf("%ld %d is thinking\n", current_time, id);
+            printf("%ld %d is thinking\n", (get_current_time_in_ms() - data->statring_time), id);
         pthread_mutex_unlock(&data->print_mutex);
-
-        if(sleep_routine(data, philo))
-            break;
         current_time = get_current_time_in_ms();
         if ((current_time - philo->last_meal_time) > data->die_time)
         {
-            man_down(philo);
+            man_down(data, philo);
             break; 
         }
     }
@@ -54,66 +56,61 @@ void setup_data(t_data *data, char **argv)
     data->die_time = ft_atoi(argv[2]);
     data->eat_time = ft_atoi(argv[3]);
     data->sleep_time = ft_atoi(argv[4]);
-    data->someone_died = 0;  // Initialize the death flag
-    data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);  // Allocate dynamic array for forks
-    pthread_mutex_init(&data->death_mutex, NULL);  // Initialize the death mutex
-    pthread_mutex_init(&data->print_mutex, NULL);  // Initialize print mutex
-
+    data->someone_died = 0;
+    data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
+    data->fork_status = malloc(sizeof(int) * data->nb_p);
+    data->fork_status_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
+    for (int i = 0; i < data->nb_p; i++)
+    {
+        data->fork_status[i] = 0; // Initialisation à 0 (fourchettes libres)
+        pthread_mutex_init(&data->forks[i], NULL);
+        pthread_mutex_init(&data->fork_status_mutex[i], NULL); // Initialisation des mutex pour fork_status
+    }
+    pthread_mutex_init(&data->death_mutex, NULL);
+    pthread_mutex_init(&data->print_mutex, NULL);
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 5)
-    {
-        printf("error\nhow to use : number_of_philosophers time_to_die time_to_eat time_to_sleep\n");
-        return 1;
-    }
+    int i;
     t_data data;
+
+    if (launch_parsing(argc, argv))
+        return 1;
     setup_data(&data, argv);
-    long starting_time = get_current_time_in_ms();
-    long end_time;
     if (data.nb_p == 1)
     {
         usleep(1000 * data.die_time);
         printf("Philosopher 0 has died.\n");
         free(data.forks);
-        end_time = get_current_time_in_ms();
-        printf("checker time : %ld\n", end_time - starting_time);
         return 0;
     }
 
     pthread_t philosophers[data.nb_p];
     t_philosopher philo_args[data.nb_p];
-
-    // Initialize mutexes for the forks
-    for (int i = 0; i < data.nb_p; i++)
-    {
-        pthread_mutex_init(&data.forks[i], NULL);
-    }
-
-    // Create threads for each philosopher
-    for (int i = 0; i < data.nb_p; i++)
+    i = 0;
+    while (i < data.nb_p)
     {
         philo_args[i].id = i;
         philo_args[i].data = &data;
         philo_args[i].last_meal_time = get_current_time_in_ms();  // Initialize the last meal time
         pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]);
-        usleep(10000);
+        i++;
     }
-    // printf("test2\n");
-    // Join threads (although in this example, the threads will exit when the first philosopher dies)
-    for (int i = 0; i < data.nb_p; i++)
+    i = 0;
+    while (i < data.nb_p)
+        pthread_join(philosophers[i++], NULL);
+    pthread_mutex_destroy(&data.print_mutex);
+    i = 0;
+    while (i < data.nb_p)
     {
-        pthread_join(philosophers[i], NULL);
-    }
-    pthread_mutex_destroy(&data.print_mutex);  // Destroy print mutex
-
-    // Destroy the mutexes when done
-    for (int i = 0; i < data.nb_p; i++)
-    {
+        pthread_mutex_destroy(&data.fork_status_mutex[i]);
         pthread_mutex_destroy(&data.forks[i]);
+        i++;
     }
-    free(data.forks);  // Free the dynamically allocated array for forks
+    free(data.forks);
+    free(data.fork_status);
+    free(data.fork_status_mutex);
     return 0;
 }
 
