@@ -26,18 +26,22 @@ typedef struct s_data
     int die_time;     // Time until a philosopher dies if they don't eat
     int eat_time;     // Time spent eating
     int sleep_time;   // Time spent sleeping
+    int meal_nb;
     pthread_mutex_t *forks;    // Array of forks (mutexes)
     pthread_mutex_t *fork_status_mutex;
     pthread_mutex_t death_mutex;  // Mutex to protect the death flag
     pthread_mutex_t print_mutex;  // Mutex to protect printf calls
+    pthread_mutex_t meal_mutex;
     int someone_died;  // Flag to indicate if a philosopher has died
     int *fork_status;
+    int *eaten_enough;
 } t_data;
 
 // Structure to hold the philosopher's ID and shared data
 typedef struct s_philosopher
 {
     int id;
+    int meal_count;
     t_data *data;
     long last_meal_time;  // Timestamp of the last meal in milliseconds
 } t_philosopher;

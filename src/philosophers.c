@@ -30,8 +30,6 @@ void *philosopher(void *arg)
             break;
         if (eat_routine(data, philo))
             break;
-        // if(is_someone_dead(data))
-        //     break;
         if(sleep_routine(data, philo))
             break;
         current_time = get_current_time_in_ms();
@@ -56,18 +54,23 @@ void setup_data(t_data *data, char **argv)
     data->die_time = ft_atoi(argv[2]);
     data->eat_time = ft_atoi(argv[3]);
     data->sleep_time = ft_atoi(argv[4]);
+    if (argv[5])
+        data->meal_nb = ft_atoi(argv[5]);
     data->someone_died = 0;
     data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
+    data->eaten_enough = malloc(sizeof(int) * data->nb_p);
     data->fork_status = malloc(sizeof(int) * data->nb_p);
     data->fork_status_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
     for (int i = 0; i < data->nb_p; i++)
     {
+        data->eaten_enough[i] = 0;
         data->fork_status[i] = 0; // Initialisation à 0 (fourchettes libres)
         pthread_mutex_init(&data->forks[i], NULL);
         pthread_mutex_init(&data->fork_status_mutex[i], NULL); // Initialisation des mutex pour fork_status
     }
     pthread_mutex_init(&data->death_mutex, NULL);
     pthread_mutex_init(&data->print_mutex, NULL);
+    pthread_mutex_init(&data->meal_mutex, NULL);
 }
 
 int main(int argc, char **argv)
@@ -92,6 +95,7 @@ int main(int argc, char **argv)
     while (i < data.nb_p)
     {
         philo_args[i].id = i;
+        philo_args[i].meal_count = 0;
         philo_args[i].data = &data;
         philo_args[i].last_meal_time = get_current_time_in_ms();  // Initialize the last meal time
         pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]);

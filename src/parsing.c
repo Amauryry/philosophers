@@ -21,9 +21,9 @@ int launch_parsing(int argc, char **argv)
 {
     int i;
     int j;
-    if (argc != 5)
+    if (argc != 5 && argc != 6)
     {
-        printf("error\nhow to use : number_of_philosophers time_to_die time_to_eat time_to_sleep\n");
+        printf("error\nhow to use : number_of_philosophers time_to_die time_to_eat time_to_sleep [opt : number_of_times_each_philosopher_must_eat]\n");
         return 1;
     }
     i = 1;
