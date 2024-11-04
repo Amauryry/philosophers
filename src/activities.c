@@ -12,6 +12,7 @@
 
 #include "../philosophers.h"
 #include <pthread.h>
+#include <unistd.h>
 
 int check_meal(t_data *data)
 {
@@ -113,6 +114,7 @@ int waiting_room(t_data *data, t_philosopher *philo)
         }
         pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
         pthread_mutex_unlock(&data->fork_status_mutex[right_fork]);
+        usleep(1000);
     }
     man_down(data, philo);
     return 42;
