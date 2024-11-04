@@ -59,6 +59,7 @@ void setup_data(t_data *data, char **argv)
     data->someone_died = 0;
     data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
     data->eaten_enough = malloc(sizeof(int) * data->nb_p);
+    data->eaten_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
     data->fork_status = malloc(sizeof(int) * data->nb_p);
     data->fork_status_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
     for (int i = 0; i < data->nb_p; i++)

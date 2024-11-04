@@ -29,6 +29,7 @@ typedef struct s_data
     int meal_nb;
     pthread_mutex_t *forks;    // Array of forks (mutexes)
     pthread_mutex_t *fork_status_mutex;
+    pthread_mutex_t *eaten_mutex;
     pthread_mutex_t death_mutex;  // Mutex to protect the death flag
     pthread_mutex_t print_mutex;  // Mutex to protect printf calls
     pthread_mutex_t meal_mutex;

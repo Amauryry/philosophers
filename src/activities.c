@@ -13,15 +13,21 @@
 #include "../philosophers.h"
 #include <pthread.h>
 
-int check_meal(t_data *data, t_philosopher *philo)
+int check_meal(t_data *data)
 {
-    pthread_mutex_lock(&data->meal_mutex);
-    if (philo->meal_count >= data->meal_nb)
-    {
-        pthread_mutex_unlock(&data->meal_mutex);
-        
-    }
-    pthread_mutex_unlock(&data->meal_mutex);
+    int i = 0;
+    while (i < data->nb_p && data->eaten_enough[i] == 1)
+        i++;
+    if (i == data->nb_p)
+        return 42;
+    return 0;
+}
+
+void set_meal(t_data *data, t_philosopher *philo)
+{
+    pthread_mutex_lock(&data->eaten_mutex[philo->id]);
+    data->eaten_enough[philo->id] = 1;
+    pthread_mutex_unlock(&data->eaten_mutex[philo->id]);
 }
 
 int     eat_routine(t_data *data, t_philosopher *philo)
@@ -50,8 +56,14 @@ int     eat_routine(t_data *data, t_philosopher *philo)
     }
     philo->last_meal_time = get_current_time_in_ms();
     philo->meal_count++;
+    if(philo->meal_count == data->meal_nb)
+        set_meal(data, philo);
     unlock_forks(data, philo->id);
-    
+    if (check_meal(data))
+    {
+        printf("%d === %d\n", philo->id, philo->meal_count);
+        exit(0);
+    }
     return 0;
 }
 
