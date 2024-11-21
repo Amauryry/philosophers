@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 14:37:38 by aberion           #+#    #+#             */
-/*   Updated: 2024/10/30 17:24:38 by aberion          ###   ########.fr       */
+/*   Updated: 2024/11/21 15:13:47 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,9 @@
 int check_meal(t_data *data)
 {
     int i = 0;
+    // printf("%d\n", data->meal_nb);
+    if(!data->meal_nb)
+        return (0);
     while (i < data->nb_p && data->eaten_enough[i] == 1)
         i++;
     if (i == data->nb_p)
@@ -62,8 +65,8 @@ int     eat_routine(t_data *data, t_philosopher *philo)
     unlock_forks(data, philo->id);
     if (check_meal(data))
     {
-        printf("%d === %d\n", philo->id, philo->meal_count);
-        exit(0);
+        printf("%ld  %d === %d\n", (get_current_time_in_ms() - data->statring_time), philo->id, philo->meal_count);
+        return 1;
     }
     return 0;
 }
@@ -114,7 +117,7 @@ int waiting_room(t_data *data, t_philosopher *philo)
         }
         pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
         pthread_mutex_unlock(&data->fork_status_mutex[right_fork]);
-        usleep(1000);
+        // usleep(1000);
     }
     man_down(data, philo);
     return 42;

@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/10/30 17:32:15 by aberion          ###   ########.fr       */
+/*   Updated: 2024/11/21 15:22:21 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,8 @@ void setup_data(t_data *data, char **argv)
     data->sleep_time = ft_atoi(argv[4]);
     if (argv[5])
         data->meal_nb = ft_atoi(argv[5]);
+    else
+        data->meal_nb = 0;
     data->someone_died = 0;
     data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
     data->eaten_enough = malloc(sizeof(int) * data->nb_p);
