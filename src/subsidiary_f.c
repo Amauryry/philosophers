@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 10:52:51 by aberion           #+#    #+#             */
-/*   Updated: 2024/10/30 17:20:51 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/03 12:43:43 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,10 +53,10 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
     long start_time = get_current_time_in_ms();
     long end_time = start_time + time;
 
-    while (get_current_time_in_ms() < end_time)
+    while (get_current_time_in_ms() < end_time && !data->meal_checker)
     {
         pthread_mutex_lock(&data->death_mutex);
-        if (data->someone_died)
+        if (data->someone_died || data->meal_checker)
         {
             pthread_mutex_unlock(&data->death_mutex);
             return 1;
@@ -69,6 +69,8 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
         }
         pthread_mutex_unlock(&data->death_mutex);
     }
+    if (data->meal_checker)
+        return 1;
     return 0;
 }
 
@@ -78,7 +80,8 @@ void man_down(t_data *data, t_philosopher *philo)
     philo->data->someone_died = 1;  // Marque un philosophe comme mort
     pthread_mutex_unlock(&philo->data->death_mutex);
     pthread_mutex_lock(&data->print_mutex);
-    printf("%ld %d died\n",  (get_current_time_in_ms() - philo->data->statring_time), philo->id);
+    if (!data->meal_checker)
+        printf("%ld %d died\n",  (get_current_time_in_ms() - philo->data->statring_time), philo->id);
     pthread_mutex_unlock(&data->print_mutex);
     
 }
@@ -120,11 +123,11 @@ void unlock_forks(t_data *data, int id)
 int is_someone_dead(t_data *data)
 {
     pthread_mutex_lock(&data->death_mutex);
-        if (data->someone_died)
-        {
-            pthread_mutex_unlock(&data->death_mutex);
-            return 1;
-        }
+    if (data->someone_died)
+    {
+        pthread_mutex_unlock(&data->death_mutex);
+        return 1;
+    }
     pthread_mutex_unlock(&data->death_mutex);
     return 0;
 }

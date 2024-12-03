@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 14:37:38 by aberion           #+#    #+#             */
-/*   Updated: 2024/11/21 15:13:47 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/03 12:54:17 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,14 @@
 int check_meal(t_data *data)
 {
     int i = 0;
-    // printf("%d\n", data->meal_nb);
     if(!data->meal_nb)
         return (0);
     while (i < data->nb_p && data->eaten_enough[i] == 1)
         i++;
     if (i == data->nb_p)
+    {
         return 42;
+    }
     return 0;
 }
 
@@ -42,6 +43,11 @@ int     eat_routine(t_data *data, t_philosopher *philo)
     pthread_mutex_lock(&data->print_mutex);
     if (!is_someone_dead(data))
     {
+        if (data->meal_checker)
+        {
+            pthread_mutex_unlock(&data->print_mutex);
+            return 1;
+        }
         printf("%ld %d has taken a fork\n", (get_current_time_in_ms() - data->statring_time), philo->id);
         printf("%ld %d is eating\n", (get_current_time_in_ms() - data->statring_time), philo->id);
     }
@@ -65,7 +71,15 @@ int     eat_routine(t_data *data, t_philosopher *philo)
     unlock_forks(data, philo->id);
     if (check_meal(data))
     {
-        printf("%ld  %d === %d\n", (get_current_time_in_ms() - data->statring_time), philo->id, philo->meal_count);
+        pthread_mutex_lock(&data->print_mutex);
+        pthread_mutex_lock(&data->meal_c_mutex);
+        if (!data->meal_checker)
+        {
+            printf("%ld %d All the philosophers have eaten enough.\n", (get_current_time_in_ms() - data->statring_time), philo->id);
+            data->meal_checker = 1;
+        }
+        pthread_mutex_unlock(&data->meal_c_mutex);
+        pthread_mutex_unlock(&data->print_mutex);
         return 1;
     }
     return 0;
@@ -78,6 +92,8 @@ int sleep_routine(t_data *data, t_philosopher *philo)
     pthread_mutex_lock(&data->print_mutex);
     if (!is_someone_dead(data))
     {
+        if (data->meal_checker)
+            return 1;
         printf("%ld %d is sleeping\n", (get_current_time_in_ms() - data->statring_time), philo->id);
     }
     pthread_mutex_unlock(&data->print_mutex);
@@ -96,11 +112,9 @@ int waiting_room(t_data *data, t_philosopher *philo)
 {
     int left_fork = philo->id;
     int right_fork = (philo->id + 1) % data->nb_p;
-    
-    while ((get_current_time_in_ms() - philo->last_meal_time) < data->die_time)
+    while ((get_current_time_in_ms() - philo->last_meal_time) < data->die_time && !data->meal_checker)
     {
         pthread_mutex_lock(&data->death_mutex);
-        // printf("id == %d\n", philo->id);
         if (data->someone_died)
         {
             pthread_mutex_unlock(&data->death_mutex);
@@ -117,7 +131,6 @@ int waiting_room(t_data *data, t_philosopher *philo)
         }
         pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
         pthread_mutex_unlock(&data->fork_status_mutex[right_fork]);
-        // usleep(1000);
     }
     man_down(data, philo);
     return 42;

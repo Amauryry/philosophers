@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/20 07:54:47 by aberion           #+#    #+#             */
-/*   Updated: 2024/10/30 17:18:19 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/03 10:05:15 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,9 @@ typedef struct s_data
     pthread_mutex_t death_mutex;  // Mutex to protect the death flag
     pthread_mutex_t print_mutex;  // Mutex to protect printf calls
     pthread_mutex_t meal_mutex;
+    pthread_mutex_t meal_c_mutex;
     int someone_died;  // Flag to indicate if a philosopher has died
+    int meal_checker;
     int *fork_status;
     int *eaten_enough;
 } t_data;
@@ -58,5 +60,6 @@ int is_someone_dead(t_data *data);
 int sleep_routine(t_data *data, t_philosopher *philo);
 int launch_parsing(int argc, char **argv);
 int waiting_room(t_data *data, t_philosopher *philo);
+int check_meal(t_data *data);
 
 #endif

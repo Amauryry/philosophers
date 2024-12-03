@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/11/21 15:22:21 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/03 12:03:55 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,10 +33,16 @@ void *philosopher(void *arg)
         if(sleep_routine(data, philo))
             break;
         current_time = get_current_time_in_ms();
-        pthread_mutex_lock(&data->print_mutex);
         if (!is_someone_dead(data))
-            printf("%ld %d is thinking\n", (get_current_time_in_ms() - data->statring_time), id);
-        pthread_mutex_unlock(&data->print_mutex);
+        {
+            if (data->meal_checker)
+                break;
+            pthread_mutex_unlock(&data->meal_c_mutex);
+            pthread_mutex_lock(&data->print_mutex);
+            if (!data->meal_checker)
+                printf("%ld %d is thinking\n", (get_current_time_in_ms() - data->statring_time), id);
+            pthread_mutex_unlock(&data->print_mutex);
+        }
         current_time = get_current_time_in_ms();
         if ((current_time - philo->last_meal_time) > data->die_time)
         {
@@ -59,6 +65,8 @@ void setup_data(t_data *data, char **argv)
     else
         data->meal_nb = 0;
     data->someone_died = 0;
+    data->eaten_enough = 0;
+    data->meal_checker = 0;
     data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
     data->eaten_enough = malloc(sizeof(int) * data->nb_p);
     data->eaten_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
