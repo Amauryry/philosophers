@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/03 12:03:55 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/05 12:46:05 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,6 @@ void *philosopher(void *arg)
         {
             if (data->meal_checker)
                 break;
-            pthread_mutex_unlock(&data->meal_c_mutex);
             pthread_mutex_lock(&data->print_mutex);
             if (!data->meal_checker)
                 printf("%ld %d is thinking\n", (get_current_time_in_ms() - data->statring_time), id);
@@ -78,10 +77,14 @@ void setup_data(t_data *data, char **argv)
         data->fork_status[i] = 0; // Initialisation à 0 (fourchettes libres)
         pthread_mutex_init(&data->forks[i], NULL);
         pthread_mutex_init(&data->fork_status_mutex[i], NULL); // Initialisation des mutex pour fork_status
+        pthread_mutex_init(&data->eaten_mutex[i], NULL);
+
     }
     pthread_mutex_init(&data->death_mutex, NULL);
     pthread_mutex_init(&data->print_mutex, NULL);
     pthread_mutex_init(&data->meal_mutex, NULL);
+    pthread_mutex_init(&data->meal_c_mutex, NULL);
+
 }
 
 int main(int argc, char **argv)
@@ -126,6 +129,8 @@ int main(int argc, char **argv)
     free(data.forks);
     free(data.fork_status);
     free(data.fork_status_mutex);
+    free(data.eaten_enough);
+    free(data.eaten_mutex);
     return 0;
 }
 

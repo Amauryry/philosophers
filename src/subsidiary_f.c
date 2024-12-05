@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 10:52:51 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/03 12:43:43 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/05 13:39:23 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,7 @@ int skip_time(int time, t_data *data, t_philosopher *philo)
             return 42;
         }
         pthread_mutex_unlock(&data->death_mutex);
+        usleep(1000);
     }
     if (data->meal_checker)
         return 1;
@@ -114,10 +115,20 @@ void lock_forks(t_data *data, int id)
 
 void unlock_forks(t_data *data, int id)
 {
-    set_fork_status(data, id, 0);
-    pthread_mutex_unlock(&data->forks[id]);
-    set_fork_status(data, (id + 1) % data->nb_p, 0);
-    pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
+    if (id % 2 == 0)
+    {
+        set_fork_status(data, id, 0);
+        pthread_mutex_unlock(&data->forks[id]);
+        set_fork_status(data, (id + 1) % data->nb_p, 0);
+        pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
+    }
+    else
+    {
+        set_fork_status(data, (id + 1) % data->nb_p, 0);
+        pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
+        set_fork_status(data, id, 0);
+        pthread_mutex_unlock(&data->forks[id]);
+    }
 }
 
 int is_someone_dead(t_data *data)
