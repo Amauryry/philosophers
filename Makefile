@@ -3,9 +3,9 @@ CC = cc
 CFLAGS = -Wall -Wextra -Werror
 SRCDIR = src
 OBJDIR = obj
-SRCS = $(SRCDIR)/philosophers.c $(SRCDIR)/subsidiary_f.c $(SRCDIR)/activities.c $(SRCDIR)/parsing.c $(SRCDIR)/activities_2.c
+SRCS = $(SRCDIR)/philosophers.c $(SRCDIR)/subsidiary_f.c $(SRCDIR)/sub_f_2.c $(SRCDIR)/activities.c $(SRCDIR)/setup_clean.c $(SRCDIR)/parsing.c $(SRCDIR)/activities_2.c
 OBJS = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-NAME = philosophers
+NAME = philo
 HEADER = philosophers.h
 
 # Rules

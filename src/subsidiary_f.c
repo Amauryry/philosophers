@@ -6,13 +6,19 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 10:52:51 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/05 13:39:23 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/09 13:09:35 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../philosophers.h"
-#include <unistd.h>
-#include <stdlib.h>
+
+void	print_message(const char *s, t_data *data, t_philosopher *philo)
+{
+	pthread_mutex_lock(&data->print_mutex);
+	printf("%ld %d %s\n", (get_current_time_in_ms() - data->statring_time),
+		philo->id, s);
+	pthread_mutex_unlock(&data->print_mutex);
+}
 
 int	ft_atoi(const char *str)
 {
@@ -41,104 +47,39 @@ int	ft_atoi(const char *str)
 	return (result *= minus);
 }
 
-long get_current_time_in_ms()
+long	get_current_time_in_ms(void)
 {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+	struct timeval	tv;
+
+	gettimeofday(&tv, NULL);
+	return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
-int skip_time(int time, t_data *data, t_philosopher *philo)
+int	skip_time(int time, t_data *data, t_philosopher *philo)
 {
-    long start_time = get_current_time_in_ms();
-    long end_time = start_time + time;
+	long	start_time;
+	long	end_time;
 
-    while (get_current_time_in_ms() < end_time && !data->meal_checker)
-    {
-        pthread_mutex_lock(&data->death_mutex);
-        if (data->someone_died || data->meal_checker)
-        {
-            pthread_mutex_unlock(&data->death_mutex);
-            return 1;
-        }
-        if ((get_current_time_in_ms() - philo->last_meal_time) > data->die_time)
-        {
-            data->someone_died = 1;
-            pthread_mutex_unlock(&data->death_mutex);
-            return 42;
-        }
-        pthread_mutex_unlock(&data->death_mutex);
-        usleep(1000);
-    }
-    if (data->meal_checker)
-        return 1;
-    return 0;
-}
-
-void man_down(t_data *data, t_philosopher *philo)
-{
-    pthread_mutex_lock(&philo->data->death_mutex);
-    philo->data->someone_died = 1;  // Marque un philosophe comme mort
-    pthread_mutex_unlock(&philo->data->death_mutex);
-    pthread_mutex_lock(&data->print_mutex);
-    if (!data->meal_checker)
-        printf("%ld %d died\n",  (get_current_time_in_ms() - philo->data->statring_time), philo->id);
-    pthread_mutex_unlock(&data->print_mutex);
-    
-}
-
-void set_fork_status(t_data *data, int id, int status)
-{
-    pthread_mutex_lock(&data->fork_status_mutex[id]); // Protéger l'accès à fork_status avec un mutex
-    data->fork_status[id] = status;
-    pthread_mutex_unlock(&data->fork_status_mutex[id]);
-}
-
-void lock_forks(t_data *data, int id)
-{
-    if (id % 2 == 0)
-    {
-        pthread_mutex_lock(&data->forks[id]);
-        set_fork_status(data, id, 1);
-        pthread_mutex_lock(&data->forks[(id + 1) % data->nb_p]);
-        set_fork_status(data, (id + 1) % data->nb_p, 1);
-    }
-    else
-    {
-        pthread_mutex_lock(&data->forks[(id + 1) % data->nb_p]);
-        set_fork_status(data, (id + 1) % data->nb_p, 1);
-        pthread_mutex_lock(&data->forks[id]);
-        set_fork_status(data, id, 1);
-    }
-}
-
-
-void unlock_forks(t_data *data, int id)
-{
-    if (id % 2 == 0)
-    {
-        set_fork_status(data, id, 0);
-        pthread_mutex_unlock(&data->forks[id]);
-        set_fork_status(data, (id + 1) % data->nb_p, 0);
-        pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
-    }
-    else
-    {
-        set_fork_status(data, (id + 1) % data->nb_p, 0);
-        pthread_mutex_unlock(&data->forks[(id + 1) % data->nb_p]);
-        set_fork_status(data, id, 0);
-        pthread_mutex_unlock(&data->forks[id]);
-    }
-}
-
-int is_someone_dead(t_data *data)
-{
-    pthread_mutex_lock(&data->death_mutex);
-    if (data->someone_died)
-    {
-        pthread_mutex_unlock(&data->death_mutex);
-        return 1;
-    }
-    pthread_mutex_unlock(&data->death_mutex);
-    return 0;
+	start_time = get_current_time_in_ms();
+	end_time = start_time + time;
+	while (get_current_time_in_ms() < end_time && !data->meal_checker)
+	{
+		pthread_mutex_lock(&data->death_mutex);
+		if (data->someone_died || data->meal_checker)
+		{
+			pthread_mutex_unlock(&data->death_mutex);
+			return (1);
+		}
+		if ((get_current_time_in_ms() - philo->last_meal_time) > data->die_time)
+		{
+			data->someone_died = 1;
+			pthread_mutex_unlock(&data->death_mutex);
+			return (42);
+		}
+		pthread_mutex_unlock(&data->death_mutex);
+		usleep(1000);
+	}
+	if (data->meal_checker)
+		return (1);
+	return (0);
 }

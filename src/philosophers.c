@@ -6,132 +6,95 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/05 12:46:05 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/09 13:19:32 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../philosophers.h"
-#include <unistd.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 // TIME TO DIE == TIME TO EAT == TIME TO SLEEP
-void *philosopher(void *arg)
+void	*philosopher(void *arg)
 {
-    t_philosopher *philo = (t_philosopher *)arg;
-    int id = philo->id;
-    t_data *data = philo->data;
-    long current_time;
+	t_philosopher	*philo;
+	t_data			*data;
 
-    while (1)
-    {
-        if(is_someone_dead(data))
-            break;
-        if(waiting_room(data, philo))
-            break;
-        if (eat_routine(data, philo))
-            break;
-        if(sleep_routine(data, philo))
-            break;
-        current_time = get_current_time_in_ms();
-        if (!is_someone_dead(data))
-        {
-            if (data->meal_checker)
-                break;
-            pthread_mutex_lock(&data->print_mutex);
-            if (!data->meal_checker)
-                printf("%ld %d is thinking\n", (get_current_time_in_ms() - data->statring_time), id);
-            pthread_mutex_unlock(&data->print_mutex);
-        }
-        current_time = get_current_time_in_ms();
-        if ((current_time - philo->last_meal_time) > data->die_time)
-        {
-            man_down(data, philo);
-            break; 
-        }
-    }
-    return NULL;
+	philo = (t_philosopher *)arg;
+	data = philo->data;
+	while (1)
+	{
+		if (is_someone_dead(data))
+			break ;
+		if (waiting_room(data, philo))
+			break ;
+		if (eat_routine(data, philo))
+			break ;
+		if (sleep_routine(data, philo))
+			break ;
+		if (think_routine(data, philo))
+			break ;
+	}
+	return (NULL);
 }
 
-void setup_data(t_data *data, char **argv)
+void	initialize_philosophers(t_philosopher *philo_args,
+		pthread_t *philosophers, t_data *data)
 {
-    data->statring_time = get_current_time_in_ms();
-    data->nb_p = ft_atoi(argv[1]);
-    data->die_time = ft_atoi(argv[2]);
-    data->eat_time = ft_atoi(argv[3]);
-    data->sleep_time = ft_atoi(argv[4]);
-    if (argv[5])
-        data->meal_nb = ft_atoi(argv[5]);
-    else
-        data->meal_nb = 0;
-    data->someone_died = 0;
-    data->eaten_enough = 0;
-    data->meal_checker = 0;
-    data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
-    data->eaten_enough = malloc(sizeof(int) * data->nb_p);
-    data->eaten_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
-    data->fork_status = malloc(sizeof(int) * data->nb_p);
-    data->fork_status_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
-    for (int i = 0; i < data->nb_p; i++)
-    {
-        data->eaten_enough[i] = 0;
-        data->fork_status[i] = 0; // Initialisation à 0 (fourchettes libres)
-        pthread_mutex_init(&data->forks[i], NULL);
-        pthread_mutex_init(&data->fork_status_mutex[i], NULL); // Initialisation des mutex pour fork_status
-        pthread_mutex_init(&data->eaten_mutex[i], NULL);
+	int	i;
 
-    }
-    pthread_mutex_init(&data->death_mutex, NULL);
-    pthread_mutex_init(&data->print_mutex, NULL);
-    pthread_mutex_init(&data->meal_mutex, NULL);
-    pthread_mutex_init(&data->meal_c_mutex, NULL);
-
+	i = 0;
+	while (i < data->nb_p)
+	{
+		philo_args[i].id = i;
+		philo_args[i].meal_count = 0;
+		philo_args[i].data = data;
+		philo_args[i].last_meal_time = get_current_time_in_ms();
+		pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]);
+		i++;
+	}
 }
 
-int main(int argc, char **argv)
+void	manage_philosophers(t_data *data)
 {
-    int i;
-    t_data data;
+	pthread_t		*philosophers;
+	t_philosopher	*philo_args;
+	int				i;
 
-    if (launch_parsing(argc, argv))
-        return 1;
-    setup_data(&data, argv);
-    if (data.nb_p == 1)
-    {
-        usleep(1000 * data.die_time);
-        printf("Philosopher 0 has died.\n");
-        free(data.forks);
-        return 0;
-    }
-
-    pthread_t philosophers[data.nb_p];
-    t_philosopher philo_args[data.nb_p];
-    i = 0;
-    while (i < data.nb_p)
-    {
-        philo_args[i].id = i;
-        philo_args[i].meal_count = 0;
-        philo_args[i].data = &data;
-        philo_args[i].last_meal_time = get_current_time_in_ms();  // Initialize the last meal time
-        pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]);
-        i++;
-    }
-    i = 0;
-    while (i < data.nb_p)
-        pthread_join(philosophers[i++], NULL);
-    pthread_mutex_destroy(&data.print_mutex);
-    i = 0;
-    while (i < data.nb_p)
-    {
-        pthread_mutex_destroy(&data.fork_status_mutex[i]);
-        pthread_mutex_destroy(&data.forks[i]);
-        i++;
-    }
-    free(data.forks);
-    free(data.fork_status);
-    free(data.fork_status_mutex);
-    free(data.eaten_enough);
-    free(data.eaten_mutex);
-    return 0;
+	philosophers = malloc(sizeof(pthread_t) * data->nb_p);
+	if (!philosophers)
+		return ;
+	philo_args = malloc(sizeof(t_philosopher) * data->nb_p);
+	if (!philo_args)
+	{
+		free(philosophers);
+		return ;
+	}
+	i = 0;
+	initialize_philosophers(philo_args, philosophers, data);
+	i = 0;
+	while (i < data->nb_p)
+		pthread_join(philosophers[i++], NULL);
+	cleanup_resources(data);
+	free(philosophers);
+	free(philo_args);
 }
 
+int	main(int argc, char **argv)
+{
+	t_data	data;
 
+	if (launch_parsing(argc, argv))
+		return (1);
+	setup_data(&data, argv);
+	if (data.nb_p == 1)
+	{
+		usleep(1000 * data.die_time);
+		printf("%ld 0 has died.\n", get_current_time_in_ms()
+			- data.statring_time);
+		free(data.forks);
+		return (0);
+	}
+	manage_philosophers(&data);
+	return (0);
+}

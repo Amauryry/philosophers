@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/20 07:54:47 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/05 14:13:05 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/09 12:47:56 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,5 +62,12 @@ int launch_parsing(int argc, char **argv);
 int waiting_room(t_data *data, t_philosopher *philo);
 int check_meal(t_data *data);
 void set_meal(t_data *data, t_philosopher *philo);
+void	print_message(const char *s, t_data *data, t_philosopher *philo);
+int	handle_meal_check(t_data *data, t_philosopher *philo);
+int	handle_meal_state(t_data *data, t_philosopher *philo, int temp);
+int think_routine(t_data *data, t_philosopher *philo);
+void	setup_data(t_data *data, char **argv);
+void	cleanup_resources(t_data *data);
+
 
 #endif
