@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/09 13:19:32 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/09 14:22:26 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,10 @@ int	main(int argc, char **argv)
 	t_data	data;
 
 	if (launch_parsing(argc, argv))
+	{
+		printf("error\n");
 		return (1);
+	}
 	setup_data(&data, argv);
 	if (data.nb_p == 1)
 	{
