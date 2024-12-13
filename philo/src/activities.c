@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 14:37:38 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/09 12:45:32 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/13 16:09:41 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,20 +63,45 @@ int	sleep_routine(t_data *data, t_philosopher *philo)
 	return (0);
 }
 
+
 int	check_forks_status(t_data *data, int left_fork, int right_fork)
 {
+	if (left_fork > right_fork)
+	{
+		int temp = left_fork;
+		left_fork = right_fork;
+		right_fork = temp;
+	}
+
 	pthread_mutex_lock(&data->fork_status_mutex[left_fork]);
 	pthread_mutex_lock(&data->fork_status_mutex[right_fork]);
+
 	if (data->fork_status[left_fork] == 0 && data->fork_status[right_fork] == 0)
 	{
-		pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
 		pthread_mutex_unlock(&data->fork_status_mutex[right_fork]);
+		pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
 		return (0);
 	}
-	pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
+
 	pthread_mutex_unlock(&data->fork_status_mutex[right_fork]);
+	pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
 	return (1);
 }
+
+// int	check_forks_status(t_data *data, int left_fork, int right_fork)
+// {
+// 	pthread_mutex_lock(&data->fork_status_mutex[left_fork]);
+// 	pthread_mutex_lock(&data->fork_status_mutex[right_fork]);
+// 	if (data->fork_status[left_fork] == 0 && data->fork_status[right_fork] == 0)
+// 	{
+// 		pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
+// 		pthread_mutex_unlock(&data->fork_status_mutex[right_fork]);
+// 		return (0);
+// 	}
+// 	pthread_mutex_unlock(&data->fork_status_mutex[left_fork]);
+// 	pthread_mutex_unlock(&data->fork_status_mutex[right_fork]);
+// 	return (1);
+// }
 
 int	waiting_room(t_data *data, t_philosopher *philo)
 {
