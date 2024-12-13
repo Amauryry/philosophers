@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 10:52:51 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/09 13:09:35 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/13 16:52:32 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,14 +62,17 @@ int	skip_time(int time, t_data *data, t_philosopher *philo)
 
 	start_time = get_current_time_in_ms();
 	end_time = start_time + time;
-	while (get_current_time_in_ms() < end_time && !data->meal_checker)
+	while (1)
 	{
 		pthread_mutex_lock(&data->death_mutex);
+		pthread_mutex_lock(&data->meal_c_mutex);
 		if (data->someone_died || data->meal_checker)
 		{
 			pthread_mutex_unlock(&data->death_mutex);
+			pthread_mutex_unlock(&data->meal_c_mutex);
 			return (1);
 		}
+		pthread_mutex_unlock(&data->meal_c_mutex);
 		if ((get_current_time_in_ms() - philo->last_meal_time) > data->die_time)
 		{
 			data->someone_died = 1;
@@ -77,9 +80,9 @@ int	skip_time(int time, t_data *data, t_philosopher *philo)
 			return (42);
 		}
 		pthread_mutex_unlock(&data->death_mutex);
+		if (get_current_time_in_ms() >= end_time)
+			break;
 		usleep(1000);
 	}
-	if (data->meal_checker)
-		return (1);
 	return (0);
 }
