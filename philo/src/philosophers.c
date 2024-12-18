@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/09 14:22:26 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/16 17:57:39 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ void	initialize_philosophers(t_philosopher *philo_args,
 	i = 0;
 	while (i < data->nb_p)
 	{
+		philo_args[i].meal_nb = data->meal_nb;
 		philo_args[i].id = i;
 		philo_args[i].meal_count = 0;
 		philo_args[i].data = data;

@@ -1,6 +1,6 @@
 # Variables
 CC = cc
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -g3
 SRCDIR = src
 OBJDIR = obj
 SRCS = $(SRCDIR)/philosophers.c $(SRCDIR)/subsidiary_f.c $(SRCDIR)/sub_f_2.c $(SRCDIR)/activities.c $(SRCDIR)/setup_clean.c $(SRCDIR)/parsing.c $(SRCDIR)/activities_2.c

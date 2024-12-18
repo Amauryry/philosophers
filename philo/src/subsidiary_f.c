@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 10:52:51 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/13 16:52:32 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/17 13:44:33 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,16 @@ long	get_current_time_in_ms(void)
 	return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
+int	check_death_or_meal(t_data *data)
+{
+	if (data->someone_died)
+	{
+		pthread_mutex_unlock(&data->death_mutex);
+		return (1);
+	}
+	return (0);
+}
+
 int	skip_time(int time, t_data *data, t_philosopher *philo)
 {
 	long	start_time;
@@ -65,23 +75,17 @@ int	skip_time(int time, t_data *data, t_philosopher *philo)
 	while (1)
 	{
 		pthread_mutex_lock(&data->death_mutex);
-		pthread_mutex_lock(&data->meal_c_mutex);
-		if (data->someone_died || data->meal_checker)
-		{
-			pthread_mutex_unlock(&data->death_mutex);
-			pthread_mutex_unlock(&data->meal_c_mutex);
+		if (check_death_or_meal(data))
 			return (1);
-		}
-		pthread_mutex_unlock(&data->meal_c_mutex);
 		if ((get_current_time_in_ms() - philo->last_meal_time) > data->die_time)
 		{
-			data->someone_died = 1;
 			pthread_mutex_unlock(&data->death_mutex);
+			man_down(data, philo);
 			return (42);
 		}
 		pthread_mutex_unlock(&data->death_mutex);
 		if (get_current_time_in_ms() >= end_time)
-			break;
+			break ;
 		usleep(1000);
 	}
 	return (0);

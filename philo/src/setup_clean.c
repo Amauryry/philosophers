@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 12:45:01 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/09 12:47:49 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/16 16:30:08 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ void	initialize_mutexes_and_arrays(t_data *data)
 	pthread_mutex_init(&data->death_mutex, NULL);
 	pthread_mutex_init(&data->print_mutex, NULL);
 	pthread_mutex_init(&data->meal_mutex, NULL);
-	pthread_mutex_init(&data->meal_c_mutex, NULL);
 }
 
 void	setup_data(t_data *data, char **argv)
@@ -45,7 +44,6 @@ void	setup_data(t_data *data, char **argv)
 		data->meal_nb = 0;
 	data->someone_died = 0;
 	data->eaten_enough = 0;
-	data->meal_checker = 0;
 	data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
 	data->eaten_enough = malloc(sizeof(int) * data->nb_p);
 	data->eaten_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
