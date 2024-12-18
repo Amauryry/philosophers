@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/20 07:54:47 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/16 17:56:12 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/18 13:24:35 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <stdlib.h>
 # include <sys/time.h>
 # include <unistd.h>
+
 
 typedef struct s_data
 {
@@ -36,6 +37,7 @@ typedef struct s_data
 	int				someone_died;
 	int				*fork_status;
 	int				*eaten_enough;
+	struct s_philosopher	*philos;
 }					t_data;
 
 // Structure to hold the philosopher's ID and shared data
@@ -53,7 +55,7 @@ long				get_current_time_in_ms(void);
 int					skip_time(int time, t_data *data, t_philosopher *philo);
 void				man_down(t_data *data, t_philosopher *philo);
 int					eat_routine(t_data *data, t_philosopher *philo);
-void				lock_forks(t_data *data, int id);
+int				lock_forks(t_data *data, t_philosopher *philo);
 void				unlock_forks(t_data *data, int id);
 int					is_someone_dead(t_data *data);
 int					sleep_routine(t_data *data, t_philosopher *philo);

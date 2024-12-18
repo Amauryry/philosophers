@@ -6,11 +6,12 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/16 17:57:39 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/18 13:48:50 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../philosophers.h"
+#include <pthread.h>
 #include <stdbool.h>
 #include <unistd.h>
 
@@ -26,8 +27,6 @@ void	*philosopher(void *arg)
 	{
 		if (is_someone_dead(data))
 			break ;
-		if (waiting_room(data, philo))
-			break ;
 		if (eat_routine(data, philo))
 			break ;
 		if (sleep_routine(data, philo))
@@ -36,6 +35,28 @@ void	*philosopher(void *arg)
 			break ;
 	}
 	return (NULL);
+}
+
+void *monitoring(void *arg)
+{
+	int i;
+	t_data *data;
+	
+	data = (t_data *)arg;
+
+	while (true)
+	{
+		i = 0;
+		while(i < data->nb_p)
+		{
+			if (get_current_time_in_ms() - data->philos[i].last_meal_time > data->die_time)
+			{
+				man_down(data, &data->philos[i]);
+				return NULL;
+			}
+			i++;
+		}	
+	}
 }
 
 void	initialize_philosophers(t_philosopher *philo_args,
@@ -53,7 +74,11 @@ void	initialize_philosophers(t_philosopher *philo_args,
 		philo_args[i].last_meal_time = get_current_time_in_ms();
 		pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]);
 		i++;
+		usleep(30);
 	}
+	pthread_t monitor;
+	pthread_create(&monitor, NULL, monitoring, data);
+	pthread_join(monitor, NULL);
 }
 
 void	manage_philosophers(t_data *data)
@@ -72,6 +97,7 @@ void	manage_philosophers(t_data *data)
 		return ;
 	}
 	i = 0;
+	data->philos = philo_args;
 	initialize_philosophers(philo_args, philosophers, data);
 	i = 0;
 	while (i < data->nb_p)
