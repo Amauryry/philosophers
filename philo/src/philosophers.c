@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/18 13:48:50 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/18 17:48:17 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@ void	*philosopher(void *arg)
 
 	philo = (t_philosopher *)arg;
 	data = philo->data;
+	if (philo->id % 2 == 0)
+		usleep(1500);
 	while (1)
 	{
 		if (is_someone_dead(data))
@@ -49,9 +51,11 @@ void *monitoring(void *arg)
 		i = 0;
 		while(i < data->nb_p)
 		{
+			pthread_mutex_lock(&data->philos[i].mutex);
 			if (get_current_time_in_ms() - data->philos[i].last_meal_time > data->die_time)
 			{
-				man_down(data, &data->philos[i]);
+				if (data->philos[i].meal_count != data->meal_nb)
+					man_down(data, &data->philos[i]);
 				return NULL;
 			}
 			i++;
@@ -76,9 +80,7 @@ void	initialize_philosophers(t_philosopher *philo_args,
 		i++;
 		usleep(30);
 	}
-	pthread_t monitor;
-	pthread_create(&monitor, NULL, monitoring, data);
-	pthread_join(monitor, NULL);
+	monitoring(data);
 }
 
 void	manage_philosophers(t_data *data)

@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 13:08:50 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/18 15:05:06 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/18 15:22:28 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,8 +41,6 @@ int	lock_forks(t_data *data, t_philosopher *philo)
 		left_fork = right_fork;
 		right_fork = temp;
 	}
-	// if(get_current_time_in_ms() - philo->last_meal_time >= data->die_time / 2)
-	// 	usleep(1000);
 	pthread_mutex_lock(&data->forks[left_fork]);
 	if (is_someone_dead(data))
 	{

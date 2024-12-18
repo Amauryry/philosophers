@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 14:37:38 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/18 13:53:38 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/18 15:24:53 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ int	sleep_routine(t_data *data, t_philosopher *philo)
 	temp = skip_time(data->sleep_time, data, philo);
 	if (temp == 42)
 	{
-		man_down(data, philo);
+		// man_down(data, philo);
 		return (42);
 	}
 	if (temp == 1)
@@ -63,5 +63,6 @@ int	think_routine(t_data *data, t_philosopher *philo)
 	if (is_someone_dead(data))
 		return (1);
 	print_message("is thinking", data, philo);
+	usleep(1000);
 	return (0);
 }
