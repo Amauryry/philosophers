@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/19 15:26:51 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 15:40:49 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,10 @@ int	initialize_philosophers(t_philosopher *philo_args,
 		philo_args[i].last_meal_time = get_current_time_in_ms();
 		if(pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]) != 0)
 		{
+			pthread_mutex_lock(&data->death_mutex);
+			data->someone_died = 1;
+			pthread_mutex_unlock(&data->death_mutex);
+			printf("error\n");
 			error_cleanup(data, philo_args, philosophers, i);
 			return 1;
 		}
