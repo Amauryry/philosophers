@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 14:37:38 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/18 15:24:53 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 14:20:07 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,12 @@ int	eat_routine(t_data *data, t_philosopher *philo)
 	if (!is_someone_dead(data))
 	{
 		print_message("is eating", data, philo);
+		pthread_mutex_lock(&data->last_meal_mutex);
 		philo->last_meal_time = get_current_time_in_ms();
+		pthread_mutex_unlock(&data->last_meal_mutex);
+		pthread_mutex_lock(&data->meal_c_mutex);
 		philo->meal_count++;
+		pthread_mutex_unlock(&data->meal_c_mutex);
 	}
 	temp = skip_time_eating(data->eat_time, data);
 	if (philo->meal_count == philo->meal_nb)

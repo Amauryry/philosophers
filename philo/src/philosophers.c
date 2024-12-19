@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/18 17:48:17 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 15:26:51 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,19 +51,25 @@ void *monitoring(void *arg)
 		i = 0;
 		while(i < data->nb_p)
 		{
-			pthread_mutex_lock(&data->philos[i].mutex);
+			pthread_mutex_lock(&data->last_meal_mutex);
 			if (get_current_time_in_ms() - data->philos[i].last_meal_time > data->die_time)
 			{
+				pthread_mutex_unlock(&data->last_meal_mutex);
+				pthread_mutex_lock(&data->meal_c_mutex);
 				if (data->philos[i].meal_count != data->meal_nb)
 					man_down(data, &data->philos[i]);
+				pthread_mutex_unlock(&data->meal_c_mutex);
+
 				return NULL;
 			}
+			pthread_mutex_unlock(&data->last_meal_mutex);
 			i++;
 		}	
+		usleep(50);
 	}
 }
 
-void	initialize_philosophers(t_philosopher *philo_args,
+int	initialize_philosophers(t_philosopher *philo_args,
 		pthread_t *philosophers, t_data *data)
 {
 	int	i;
@@ -76,11 +82,16 @@ void	initialize_philosophers(t_philosopher *philo_args,
 		philo_args[i].meal_count = 0;
 		philo_args[i].data = data;
 		philo_args[i].last_meal_time = get_current_time_in_ms();
-		pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]);
+		if(pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]) != 0)
+		{
+			error_cleanup(data, philo_args, philosophers, i);
+			return 1;
+		}
 		i++;
 		usleep(30);
 	}
 	monitoring(data);
+	return 0;
 }
 
 void	manage_philosophers(t_data *data)
@@ -100,7 +111,8 @@ void	manage_philosophers(t_data *data)
 	}
 	i = 0;
 	data->philos = philo_args;
-	initialize_philosophers(philo_args, philosophers, data);
+	if(initialize_philosophers(philo_args, philosophers, data))
+		return;
 	i = 0;
 	while (i < data->nb_p)
 		pthread_join(philosophers[i++], NULL);

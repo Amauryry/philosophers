@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 12:45:01 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/16 16:30:08 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 15:25:01 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,16 +19,13 @@ void	initialize_mutexes_and_arrays(t_data *data)
 	i = 0;
 	while (i < data->nb_p)
 	{
-		data->eaten_enough[i] = 0;
-		data->fork_status[i] = 0;
 		pthread_mutex_init(&data->forks[i], NULL);
-		pthread_mutex_init(&data->fork_status_mutex[i], NULL);
-		pthread_mutex_init(&data->eaten_mutex[i], NULL);
 		i++;
 	}
 	pthread_mutex_init(&data->death_mutex, NULL);
+	pthread_mutex_init(&data->last_meal_mutex, NULL);
+	pthread_mutex_init(&data->meal_c_mutex, NULL);
 	pthread_mutex_init(&data->print_mutex, NULL);
-	pthread_mutex_init(&data->meal_mutex, NULL);
 }
 
 void	setup_data(t_data *data, char **argv)
@@ -45,10 +42,6 @@ void	setup_data(t_data *data, char **argv)
 	data->someone_died = 0;
 	data->eaten_enough = 0;
 	data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
-	data->eaten_enough = malloc(sizeof(int) * data->nb_p);
-	data->eaten_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
-	data->fork_status = malloc(sizeof(int) * data->nb_p);
-	data->fork_status_mutex = malloc(sizeof(pthread_mutex_t) * data->nb_p);
 	initialize_mutexes_and_arrays(data);
 }
 
@@ -56,17 +49,35 @@ void	cleanup_resources(t_data *data)
 {
 	int	i;
 
+	pthread_mutex_destroy(&data->death_mutex);
+	pthread_mutex_destroy(&data->last_meal_mutex);
+	pthread_mutex_destroy(&data->meal_c_mutex);
 	pthread_mutex_destroy(&data->print_mutex);
 	i = 0;
 	while (i < data->nb_p)
 	{
-		pthread_mutex_destroy(&data->fork_status_mutex[i]);
 		pthread_mutex_destroy(&data->forks[i]);
 		i++;
 	}
 	free(data->forks);
-	free(data->fork_status);
-	free(data->fork_status_mutex);
-	free(data->eaten_enough);
-	free(data->eaten_mutex);
+}
+
+void error_cleanup(t_data *data, t_philosopher *philo_args, pthread_t *philosophers, int i)
+{
+	int j;
+
+	j = 0;
+	while (j < i)
+	{
+		pthread_join(philosophers[j], NULL);
+		pthread_mutex_destroy(&data->forks[j]);
+		j++;
+	}
+	pthread_mutex_destroy(&data->death_mutex);
+	pthread_mutex_destroy(&data->last_meal_mutex);
+	pthread_mutex_destroy(&data->meal_c_mutex);
+	pthread_mutex_destroy(&data->print_mutex);
+	free(data->forks);
+	free(philo_args);
+	free(philosophers);
 }

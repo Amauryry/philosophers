@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/20 07:54:47 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/18 13:24:35 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 15:18:21 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,10 @@ typedef struct s_data
 	int				sleep_time;
 	int				meal_nb;
 	pthread_mutex_t	*forks;
-	pthread_mutex_t	*fork_status_mutex;
-	pthread_mutex_t	*eaten_mutex;
 	pthread_mutex_t	death_mutex;
 	pthread_mutex_t	print_mutex;
-	pthread_mutex_t	meal_mutex;
+	pthread_mutex_t	last_meal_mutex;
+	pthread_mutex_t	meal_c_mutex;
 	int				someone_died;
 	int				*fork_status;
 	int				*eaten_enough;
@@ -74,5 +73,6 @@ int					check_meal_checker(t_data *data);
 int					check_meal_condition(t_data *data, t_philosopher *philo);
 int					skip_time_eating(int time, t_data *data);
 int					check_death_or_meal(t_data *data);
+void error_cleanup(t_data *data, t_philosopher *philo_args, pthread_t *philosophers, int i);
 
 #endif
