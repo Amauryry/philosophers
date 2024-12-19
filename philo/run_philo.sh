@@ -7,7 +7,7 @@ output_file="eating_counts.txt"
 > "$output_file"
 
 # Nombre de fois que le programme doit être lancé
-iterations=100
+iterations=500
 
 # Commande à exécuter
 philo_command="./philo 5 800 200 200 7"

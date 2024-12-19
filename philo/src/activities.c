@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 14:37:38 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/19 14:20:07 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 18:57:36 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,8 @@ int	eat_routine(t_data *data, t_philosopher *philo)
 {
 	int	temp;
 
-	if(lock_forks(data, philo))
-		return 1;
+	if (lock_forks(data, philo))
+		return (1);
 	if (!is_someone_dead(data))
 	{
 		print_message("is eating", data, philo);
@@ -53,10 +53,7 @@ int	sleep_routine(t_data *data, t_philosopher *philo)
 	}
 	temp = skip_time(data->sleep_time, data, philo);
 	if (temp == 42)
-	{
-		// man_down(data, philo);
 		return (42);
-	}
 	if (temp == 1)
 		return (1);
 	return (0);

@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/18 00:27:03 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/19 15:40:49 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 18:57:55 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,38 +39,39 @@ void	*philosopher(void *arg)
 	return (NULL);
 }
 
-void *monitoring(void *arg)
+void	*monitoring(void *arg)
 {
-	int i;
-	t_data *data;
-	
-	data = (t_data *)arg;
+	int		i;
+	t_data	*data;
 
+	data = (t_data *)arg;
 	while (true)
 	{
 		i = 0;
-		while(i < data->nb_p)
+		while (i < data->nb_p)
 		{
 			pthread_mutex_lock(&data->last_meal_mutex);
-			if (get_current_time_in_ms() - data->philos[i].last_meal_time > data->die_time)
+			if (get_current_time_in_ms()
+				- data->philos[i].last_meal_time > data->die_time)
 			{
 				pthread_mutex_unlock(&data->last_meal_mutex);
 				pthread_mutex_lock(&data->meal_c_mutex);
-				if (data->philos[i].meal_count != data->meal_nb)
+				if (data->meal_nb < 0
+					|| (data->philos[i].meal_count != data->meal_nb))
 					man_down(data, &data->philos[i]);
 				pthread_mutex_unlock(&data->meal_c_mutex);
-
-				return NULL;
+				return (NULL);
 			}
 			pthread_mutex_unlock(&data->last_meal_mutex);
 			i++;
-		}	
+		}
 		usleep(50);
 	}
 }
 
 int	initialize_philosophers(t_philosopher *philo_args,
-		pthread_t *philosophers, t_data *data)
+							pthread_t *philosophers,
+							t_data *data)
 {
 	int	i;
 
@@ -82,20 +83,21 @@ int	initialize_philosophers(t_philosopher *philo_args,
 		philo_args[i].meal_count = 0;
 		philo_args[i].data = data;
 		philo_args[i].last_meal_time = get_current_time_in_ms();
-		if(pthread_create(&philosophers[i], NULL, philosopher, &philo_args[i]) != 0)
+		if (pthread_create(&philosophers[i], NULL, philosopher,
+				&philo_args[i]) != 0)
 		{
 			pthread_mutex_lock(&data->death_mutex);
 			data->someone_died = 1;
 			pthread_mutex_unlock(&data->death_mutex);
 			printf("error\n");
 			error_cleanup(data, philo_args, philosophers, i);
-			return 1;
+			return (1);
 		}
 		i++;
 		usleep(30);
 	}
 	monitoring(data);
-	return 0;
+	return (0);
 }
 
 void	manage_philosophers(t_data *data)
@@ -115,8 +117,8 @@ void	manage_philosophers(t_data *data)
 	}
 	i = 0;
 	data->philos = philo_args;
-	if(initialize_philosophers(philo_args, philosophers, data))
-		return;
+	if (initialize_philosophers(philo_args, philosophers, data))
+		return ;
 	i = 0;
 	while (i < data->nb_p)
 		pthread_join(philosophers[i++], NULL);

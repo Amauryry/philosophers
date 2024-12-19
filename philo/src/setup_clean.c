@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 12:45:01 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/19 15:25:01 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 18:53:56 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ void	setup_data(t_data *data, char **argv)
 	if (argv[5])
 		data->meal_nb = ft_atoi(argv[5]);
 	else
-		data->meal_nb = 0;
+		data->meal_nb = -1;
 	data->someone_died = 0;
 	data->eaten_enough = 0;
 	data->forks = malloc(sizeof(pthread_mutex_t) * data->nb_p);
@@ -62,9 +62,10 @@ void	cleanup_resources(t_data *data)
 	free(data->forks);
 }
 
-void error_cleanup(t_data *data, t_philosopher *philo_args, pthread_t *philosophers, int i)
+void	error_cleanup(t_data *data, t_philosopher *philo_args,
+		pthread_t *philosophers, int i)
 {
-	int j;
+	int	j;
 
 	j = 0;
 	while (j < i)

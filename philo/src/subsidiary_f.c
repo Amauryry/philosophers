@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 10:52:51 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/18 13:56:39 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 16:40:41 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,11 +57,13 @@ long	get_current_time_in_ms(void)
 
 int	check_death_or_meal(t_data *data)
 {
+	pthread_mutex_lock(&data->death_mutex);
 	if (data->someone_died)
 	{
 		pthread_mutex_unlock(&data->death_mutex);
 		return (1);
 	}
+	pthread_mutex_unlock(&data->death_mutex);
 	return (0);
 }
 
@@ -69,8 +71,8 @@ int	skip_time(int time, t_data *data, t_philosopher *philo)
 {
 	long	start_time;
 	long	end_time;
-	(void)philo; 
 
+	(void)philo;
 	start_time = get_current_time_in_ms();
 	end_time = start_time + time;
 	while (1)

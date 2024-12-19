@@ -6,7 +6,7 @@
 /*   By: aberion <aberion@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/09 13:08:50 by aberion           #+#    #+#             */
-/*   Updated: 2024/12/18 15:22:28 by aberion          ###   ########.fr       */
+/*   Updated: 2024/12/19 16:22:26 by aberion          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,20 @@ void	man_down(t_data *data, t_philosopher *philo)
 	pthread_mutex_unlock(&philo->data->death_mutex);
 }
 
+int	lock_scd_fork(t_data *data, t_philosopher *philo, int right_fork,
+		int left_fork)
+{
+	pthread_mutex_lock(&data->forks[right_fork]);
+	if (is_someone_dead(data))
+	{
+		pthread_mutex_unlock(&data->forks[right_fork]);
+		pthread_mutex_unlock(&data->forks[left_fork]);
+		return (1);
+	}
+	print_message("has taken a fork", data, philo);
+	return (0);
+}
+
 int	lock_forks(t_data *data, t_philosopher *philo)
 {
 	int	left_fork;
@@ -45,18 +59,12 @@ int	lock_forks(t_data *data, t_philosopher *philo)
 	if (is_someone_dead(data))
 	{
 		pthread_mutex_unlock(&data->forks[left_fork]);
-		return 1;
+		return (1);
 	}
 	print_message("has taken a fork", data, philo);
-	pthread_mutex_lock(&data->forks[right_fork]);
-	if (is_someone_dead(data))
-	{
-		pthread_mutex_unlock(&data->forks[right_fork]);
-		pthread_mutex_unlock(&data->forks[left_fork]);
-		return 1;
-	}
-	print_message("has taken a fork", data, philo);
-	return 0;
+	if (lock_scd_fork(data, philo, right_fork, left_fork))
+		return (1);
+	return (0);
 }
 
 void	unlock_forks(t_data *data, int id)
@@ -74,9 +82,7 @@ void	unlock_forks(t_data *data, int id)
 		right_fork = temp;
 	}
 	pthread_mutex_unlock(&data->forks[right_fork]);
-	// set_fork_status(data, right_fork, 0);
 	pthread_mutex_unlock(&data->forks[left_fork]);
-	// set_fork_status(data, left_fork, 0);
 }
 
 int	is_someone_dead(t_data *data)
